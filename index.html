@@ -1,0 +1,1432 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ukubona · The Mind as a Weight Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="icon" href="https://abikesa.github.io/favicon/assets/favicon-light.ico" />
+    <link rel="icon" href="https://abikesa.github.io/favicon/assets/favicon-dark.ico"
+          media="(prefers-color-scheme: dark)" />
+
+    <!-- Logo preloads -->
+    <link rel="preload" href="https://abikesa.github.io/logos/assets/ukubona-light.png" as="image" />
+    <link rel="preload" href="https://abikesa.github.io/logos/assets/ukubona-dark.png" as="image" />
+<style>
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0a0907;
+  --bg2:         #0f0d0a;
+  --bg3:         #141210;
+  --surf:        #1a1814;
+  --surf2:       #211f1b;
+  --ink:         #f0ead8;
+  --ink2:        #c8c0a8;
+  --ink3:        #8a8070;
+  --ink4:        #5a5248;
+  --brd:         rgba(200,180,120,0.12);
+  --brd2:        rgba(200,180,120,0.22);
+
+  --gold:        #d4a840;
+  --gold-dim:    rgba(212,168,64,0.08);
+  --gold-glow:   rgba(212,168,64,0.18);
+  --teal:        #3ab89a;
+  --teal-dim:    rgba(58,184,154,0.08);
+  --amber:       #e07030;
+  --amber-dim:   rgba(224,112,48,0.08);
+  --purple:      #9070d0;
+  --purple-dim:  rgba(144,112,208,0.10);
+  --red:         #c84040;
+  --red-dim:     rgba(200,64,64,0.08);
+  --blue:        #4880c8;
+  --blue-dim:    rgba(72,128,200,0.10);
+  --green:       #5aaa60;
+  --green-dim:   rgba(90,170,96,0.08);
+
+  --r: 8px;
+  --r2: 5px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   NOISE GRAIN OVERLAY
+═══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  z-index: 9999;
+}
+
+/* ═══════════════════════════════════════════
+   SPECTRUM BAR
+═══════════════════════════════════════════ */
+.spectrum {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4880c8, #3ab89a, #d4a840, #9070d0, #e07030, #c84040);
+  z-index: 200;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero {
+  padding: 5rem 0 2rem;
+  border-bottom: 0.5px solid var(--brd2);
+  margin-bottom: 3rem;
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.2rem;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  font-weight: 400;
+  line-height: 1.08;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.hero-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--ink3);
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+  line-height: 2;
+}
+
+/* ═══════════════════════════════════════════
+   FORMULA — THE ANCHOR
+═══════════════════════════════════════════ */
+.formula-block {
+  background: var(--bg2);
+  border: 0.5px solid var(--brd2);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 1.4rem 1.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 2.1;
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+}
+.formula-block .f-main {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+}
+.formula-block .f-term { color: var(--gold); }
+.formula-block .f-label { color: var(--ink2); }
+.formula-block .f-note { color: var(--ink3); font-size: 0.68rem; margin-top: 0.6rem; font-style: italic; }
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+.tab-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 0.5px solid var(--brd2);
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.8rem 1.2rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--ink3);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+  position: relative;
+}
+.tab-btn:hover { color: var(--ink2); }
+.tab-btn.active {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+}
+.tab-btn .tab-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════ */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═══════════════════════════════════════════
+   PROSE SECTIONS
+═══════════════════════════════════════════ */
+.section {
+  margin-bottom: 2.4rem;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--ink2);
+  margin-bottom: 0.9rem;
+  letter-spacing: 0.01em;
+}
+.section-title em { font-style: italic; color: var(--gold); }
+
+p {
+  color: var(--ink2);
+  margin-bottom: 1rem;
+  font-size: 1.06rem;
+}
+p strong { color: var(--ink); font-weight: 600; }
+p em { font-style: italic; color: var(--gold); }
+
+/* ═══════════════════════════════════════════
+   CALLOUT BOXES
+═══════════════════════════════════════════ */
+.callout {
+  border-left: 2px solid var(--brd2);
+  background: var(--surf);
+  border-radius: 0 var(--r2) var(--r2) 0;
+  padding: 1rem 1.3rem;
+  margin: 1.4rem 0;
+  font-size: 1rem;
+  color: var(--ink2);
+  line-height: 1.75;
+}
+.callout.gold   { border-left-color: var(--gold);   background: var(--gold-dim);   color: var(--ink); }
+.callout.teal   { border-left-color: var(--teal);   background: var(--teal-dim);   color: var(--ink); }
+.callout.amber  { border-left-color: var(--amber);  background: var(--amber-dim);  color: var(--ink); }
+.callout.purple { border-left-color: var(--purple); background: var(--purple-dim); color: var(--ink); }
+.callout.red    { border-left-color: var(--red);    background: var(--red-dim);    color: var(--ink); }
+.callout.blue   { border-left-color: var(--blue);   background: var(--blue-dim);   color: var(--ink); }
+.callout strong { color: inherit; }
+
+/* ═══════════════════════════════════════════
+   SLIDER COMPONENT
+═══════════════════════════════════════════ */
+.slider-wrap {
+  background: var(--surf);
+  border: 0.5px solid var(--brd);
+  border-radius: var(--r);
+  padding: 1.2rem 1.4rem;
+  margin: 1.2rem 0;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.5rem;
+}
+.slider-row label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--ink3);
+  min-width: 120px;
+  white-space: nowrap;
+}
+.slider-row input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surf2);
+  outline: none;
+  cursor: pointer;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 6px var(--gold-glow);
+}
+.slider-row input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--bg);
+  cursor: pointer;
+}
+.slider-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--gold);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+}
+.slider-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--ink4);
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════
+   WEIGHT TABLE
+═══════════════════════════════════════════ */
+.tbl-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  border: 0.5px solid var(--brd);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 1.2rem;
+}
+.tbl thead tr { background: var(--surf); }
+.tbl th {
+  padding: 7px 12px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size: 0.62rem;
+  color: var(--ink4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 0.5px solid var(--brd2);
+}
+.tbl td {
+  padding: 8px 12px;
+  border-bottom: 0.5px solid var(--brd);
+  color: var(--ink2);
+  vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--surf); }
+
+.tbl td.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+.tbl td.ok   { color: var(--teal);   font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500; }
+.tbl td.warn { color: var(--amber);  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500; }
+.tbl td.gone { color: var(--red);    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-decoration: line-through; opacity: 0.55; }
+.tbl td.info { color: var(--blue);   font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+.tbl td.dim  { color: var(--ink4);   font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+.tbl td.gold { color: var(--gold);   font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500; }
+.tbl tr.hl td { background: var(--gold-dim); }
+.tbl tr.hl-teal td { background: var(--teal-dim); }
+.tbl tr.hl-red td { background: var(--red-dim); }
+
+/* ═══════════════════════════════════════════
+   BAR TRACK
+═══════════════════════════════════════════ */
+.bar-track {
+  height: 4px;
+  background: var(--surf2);
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 80px;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════
+   BADGE
+═══════════════════════════════════════════ */
+.badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.badge.ok     { background: var(--teal-dim);   color: var(--teal);   border: 0.5px solid rgba(58,184,154,0.3); }
+.badge.warn   { background: var(--amber-dim);  color: var(--amber);  border: 0.5px solid rgba(224,112,48,0.3); }
+.badge.err    { background: var(--red-dim);    color: var(--red);    border: 0.5px solid rgba(200,64,64,0.3);  }
+.badge.info   { background: var(--blue-dim);   color: var(--blue);   border: 0.5px solid rgba(72,128,200,0.3); }
+.badge.gold   { background: var(--gold-dim);   color: var(--gold);   border: 0.5px solid rgba(212,168,64,0.3); }
+.badge.purple { background: var(--purple-dim); color: var(--purple); border: 0.5px solid rgba(144,112,208,0.3); }
+
+/* ═══════════════════════════════════════════
+   GRID CARDS
+═══════════════════════════════════════════ */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 1.2rem 0;
+}
+.card {
+  background: var(--surf);
+  border: 0.5px solid var(--brd);
+  border-radius: var(--r);
+  padding: 1rem 1.1rem;
+}
+.card h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.card p {
+  font-size: 0.9rem;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════════════
+   CHAIN / ARGUMENT FLOW
+═══════════════════════════════════════════ */
+.chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 1.4rem 0;
+}
+.chain-step {
+  display: flex;
+  gap: 14px;
+  position: relative;
+}
+.chain-step::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 36px;
+  bottom: -10px;
+  width: 1px;
+  background: var(--brd2);
+}
+.chain-step:last-child::before { display: none; }
+.chain-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surf);
+  border: 0.5px solid var(--brd2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--gold);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.chain-body {
+  padding: 0.4rem 0 1.4rem;
+}
+.chain-body h5 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+}
+.chain-body p {
+  font-size: 0.95rem;
+  color: var(--ink3);
+  margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════════════
+   COMPARISON BLOCK
+═══════════════════════════════════════════ */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  border: 0.5px solid var(--brd2);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: 1.2rem 0;
+}
+.compare-col {
+  background: var(--surf);
+  padding: 1rem 1.2rem;
+}
+.compare-col:first-child {
+  border-right: 1px solid var(--brd);
+}
+.compare-col h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+.compare-col h4.gold { color: var(--gold); }
+.compare-col h4.teal { color: var(--teal); }
+.compare-col li {
+  font-size: 0.9rem;
+  color: var(--ink3);
+  margin-bottom: 0.4rem;
+  margin-left: 1rem;
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════
+   PULL QUOTE
+═══════════════════════════════════════════ */
+.pull-quote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  color: var(--gold);
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-top: 0.5px solid var(--brd2);
+  border-bottom: 0.5px solid var(--brd2);
+  margin: 2rem 0;
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════ */
+.divider {
+  height: 0.5px;
+  background: var(--brd);
+  margin: 1.8rem 0;
+}
+
+/* ═══════════════════════════════════════════
+   DEMENTIA NOTE
+═══════════════════════════════════════════ */
+#dementia-note {
+  transition: opacity 0.3s;
+}
+
+/* ═══════════════════════════════════════════
+   INSTITUTION ROW
+═══════════════════════════════════════════ */
+.inst-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 80px;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--brd);
+  font-size: 0.88rem;
+}
+.inst-row.header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  background: var(--surf);
+  border-radius: var(--r) var(--r) 0 0;
+}
+.inst-block {
+  border: 0.5px solid var(--brd);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: 1.2rem 0;
+}
+.inst-block .inst-row:last-child { border-bottom: none; }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer {
+  border-top: 0.5px solid var(--brd2);
+  padding: 2rem 0;
+  margin-top: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink4);
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .page { padding: 0 1rem 4rem; }
+  .compare { grid-template-columns: 1fr; }
+  .inst-row { grid-template-columns: 1fr 1fr; }
+  .inst-row .inst-mech { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="spectrum"></div>
+
+<div class="page">
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <header class="hero">
+    <div class="eyebrow">Ukubona LLC · Kampala 2026 · v1.1</div>
+    <h1 class="hero-title">
+      The Mind is a<br>
+      <em>.csv file</em><br>
+      with weights
+    </h1>
+    <div class="hero-sub">
+      Memory(L_tot) = L₀ + Σᵢ wᵢLᵢ + σ²ᵢ + λᵢ + εᵢ<br>
+      Dementia · Comedy · Busoga naming · LLMs · Enduring institutions<br>
+      The full argument · Move over Freud
+    </div>
+
+    <div class="formula-block">
+      <div class="f-main">
+        Memory(L_tot) &nbsp;=&nbsp;
+        <span class="f-term">L₀</span>
+        &nbsp;+&nbsp; <span class="f-term">Σᵢ wᵢ · Lᵢ</span>
+        &nbsp;+&nbsp; <span class="f-term">σ²ᵢ</span>
+        &nbsp;+&nbsp; <span class="f-term">λᵢ</span>
+        &nbsp;+&nbsp; <span class="f-term">εᵢ</span>
+      </div>
+      <br>
+      <span class="f-label">L₀</span>&nbsp;&nbsp;&nbsp;= bedrock prior — age, culture, biology, the anchors<br>
+      <span class="f-label">wᵢ</span>&nbsp;&nbsp;&nbsp;= weights — biases learned and reinforced over a lifetime<br>
+      <span class="f-label">Lᵢ</span>&nbsp;&nbsp;&nbsp;= loss components — what the system is optimising toward<br>
+      <span class="f-label">σ²ᵢ</span>&nbsp;&nbsp;= uncertainty — unresolved null pointers, open questions<br>
+      <span class="f-label">λᵢ</span>&nbsp;&nbsp;&nbsp;= irreversibility — steps that cannot be undone (grief, vows, migration)<br>
+      <span class="f-label">εᵢ</span>&nbsp;&nbsp;&nbsp;= structured missingness — what was never encoded at all<br>
+      <div class="f-note">
+        Publishing weights = publishing the mind &nbsp;·&nbsp;
+        Dementia = selective weight decay &nbsp;·&nbsp;
+        Busoga naming = weight sharing across instantiations &nbsp;·&nbsp;
+        LLM = 65 GB human
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ TAB NAV ═══════════════════ -->
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('arg')" role="tab">
+      The argument
+      <span class="tab-mono">full chain</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('dementia')" role="tab">
+      Dementia
+      <span class="tab-mono">weight decay</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('comedy')" role="tab">
+      Comedy
+      <span class="tab-mono">mis-activation</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('busoga')" role="tab">
+      Busoga naming
+      <span class="tab-mono">weight sharing</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('llm')" role="tab">
+      LLM = 65 GB human
+      <span class="tab-mono">compression</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('enduring')" role="tab">
+      Enduring institutions
+      <span class="tab-mono">solved identity</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('twin')" role="tab">
+      Digital twin
+      <span class="tab-mono">tractable</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 1 — THE FULL ARGUMENT
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-arg" class="panel active">
+
+    <div class="section">
+      <div class="section-title">The central claim</div>
+      <p>The human mind is not a continuous stream of consciousness, a soul, or a Freudian iceberg. It is a <strong>weight matrix operating a key-to-row lookup</strong>. A token — a name, a face, a voice, a smell — fires. The correct row activates. The behaviour encoded in that row loads. This is what memory is. This is what identity is. This is what dementia destroys, and what Busoga naming exploits.</p>
+      <p>The formula above is not a metaphor. It is the <em>architecture</em>. Every human mind has the same structure. What differs between minds is the weights — the wᵢ. Publishing someone's weights would be indistinguishable from publishing their mind. LLaMA proved this in one direction: 65 GB of weights <em>is</em> the compressed representation of the internet-scale corpus it was trained on. Dementia proves it in the other direction: selective weight decay reveals the architecture by showing you what collapses in what order.</p>
+    </div>
+
+    <div class="pull-quote">
+      "The mind is not a mystery. It is a .csv file with biases and weights applied to an architecture. The architecture is invariant. The weights are everything."
+    </div>
+
+    <div class="section">
+      <div class="section-title">The chain of evidence</div>
+      <div class="chain">
+        <div class="chain-step">
+          <div class="chain-num">1</div>
+          <div class="chain-body">
+            <h5>Compression theorem — the 87-year-old's head</h5>
+            <p>An 87-year-old has a head small enough to fit through a door. If every moment of their life were recorded at VHS fidelity, the tapes would fill 20 Old Traffords stacked to the brim. The brain compresses <em>all of that</em> into approximately 1.3 kg of tissue running on 20 watts. This compression is not lossy degradation — it is <strong>lossy in the right places</strong>. What survives is a weight matrix. What is lost is the raw footage. The weights capture the patterns, the attractors, the load-bearing relationships.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">2</div>
+          <div class="chain-body">
+            <h5>Paul Luswata's father — dementia reveals the architecture</h5>
+            <p>Paul Luswata, 39, asks his 75-year-old father with dementia: <em>"Who am I to you?"</em> The father answers: <em>"Very good friend."</em> The name-token fired correctly — he knows the name Paul Luswata. The face was recognised. But the relational-category row — <strong>w_son · L_relationship</strong> — has decayed to near zero. The warmth row — <strong>w_affect · L_warmth</strong> — remains near 0.9. The father also names Paul's sisters correctly, and reports he has two kids. The data is there. The relational mapping is gone. Dementia is not subtraction. It is <strong>selective weight decay revealing the load-bearing architecture</strong>.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">3</div>
+          <div class="chain-body">
+            <h5>Busoga naming — cross-generational weight sharing</h5>
+            <p>Abimereki Muzaale is named after his father's father, who was nostalgic in his 5th year at Berkeley away from Busoga. His grandmother calls him <em>"husband."</em> His father calls him <em>"my father."</em> As a child this seemed confusing — a category error. It is not. The Busoga community runs a <strong>cross-generational weight-sharing protocol</strong>. The name-token "Abimereki" opens the grandfather-slot. The grandson's body loads the grandfather's weight row. The same operation as parameter-sharing across attention heads — encoded in naming ritual rather than matrix algebra. The grandmother is not confused. She is running the correct forward pass on the correct weights.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">4</div>
+          <div class="chain-body">
+            <h5>Comedy — misidentified activation, obvious to the audience</h5>
+            <p>Comedy, at its structural level, is what happens when a token fires the <em>wrong row</em> in the weight matrix — and this is obvious to the audience but not to the person activating it. The sufferer's system has no error signal. Their output is appropriate — to the wrong context. The gap between the row they activated and the row the audience sees is comedic potential. The punchline is gap-closure. Basil Fawlty fires <strong>w_contempt</strong> when the situation calls for <strong>w_service</strong>. The dementia patient fires <strong>w_friend</strong> when the situation calls for <strong>w_son</strong>. Busoga naming deliberately fires the grandfather-row — which makes it not comedy but ritual.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">5</div>
+          <div class="chain-body">
+            <h5>LLM = 65 GB human — publishing weights = publishing the mind</h5>
+            <p>LLaMA 3 compresses an internet-scale corpus into 65 GB of weights. Those weights <em>are</em> the compressed model of the data. Publishing the weights publishes the model. This applies to humans too. The Sovereign Intelligence Broker project begins here: elicit the weights — the wᵢ — through structured conversation, clinical history, and narrative. The body's digital twin remains hard (every disease rewrites the schema). The mind's digital twin is tractable: the architecture is invariant. Dementia changes the weights. It does not change the structure.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">6</div>
+          <div class="chain-body">
+            <h5>Enduring institutions — the solved identity problem</h5>
+            <p>Every institution that has lasted centuries has solved the same problem Busoga naming solves: <strong>make the identity-token unambiguous, make the weight row inheritable, make the embodied figurehead legible without footnotes</strong>. The Vatican's College of Cardinals. The British Crown's Prince of Wales designation. Even God sent his own son (John 3:16) because humanity doesn't do Zoom — they need flesh and blood, the scalar made incarnate. Uganda has not solved this yet. The resources squandered on ambiguous succession are not a political problem. They are a weight-matrix problem: the wᵢ for "legitimate successor" is undefined.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">7</div>
+          <div class="chain-body">
+            <h5>Move over Freud — the weight matrix is sharper</h5>
+            <p>Freud's unconscious is a badly specified loss function — rich in narrative, weak in mechanism. Nietzsche's will to power is an unregularised gradient with no irreversibility constraint. Jung's archetypes are weight-row clusters without a clear token vocabulary. The weight-matrix model is sharper than all of them: it generates testable predictions (dementia decay order), it explains comedy mechanically, it makes the Busoga naming system legible as a social technology, and it makes the digital twin of the mind tractable. This is not a metaphor. It is a model.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 2 — DEMENTIA
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-dementia" class="panel">
+
+    <div class="callout gold">
+      <strong>Paul Luswata's father — 75 years old, dementia.</strong><br>
+      Asked "who am I to you?" he answers <strong>"very good friend."</strong><br>
+      The name-token fires correctly. The face is recognised. Paul's sisters are named correctly. Two kids — correct. But the relational-category row — <strong>w_son · L_relationship</strong> — has decayed to near zero. The warmth row is intact at 0.9. Dementia is not subtraction. It is <strong>selective weight decay revealing the load-bearing architecture.</strong>
+    </div>
+
+    <div class="slider-wrap">
+      <div class="slider-row">
+        <label>Dementia stage</label>
+        <input type="range" min="0" max="100" value="60" id="dSlider" oninput="updateDementia(this.value)">
+        <span class="slider-val" id="dVal">60%</span>
+      </div>
+      <p class="slider-hint">Drag right → weights decay in order of depth. Relational category lost first. Emotional warmth last.</p>
+    </div>
+
+    <div class="tbl-label">θ · Paul Luswata's father · weight matrix state</div>
+    <table class="tbl" id="dementiaTable">
+      <thead>
+        <tr>
+          <th style="width:160px">Weight row</th>
+          <th style="width:60px">wᵢ</th>
+          <th>Lᵢ component</th>
+          <th style="width:130px">Strength</th>
+          <th style="width:80px">Status</th>
+        </tr>
+      </thead>
+      <tbody id="dTbody"></tbody>
+    </table>
+
+    <div class="callout" id="dementia-note" style="border-left-color: var(--amber);">Loading…</div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">What dementia actually proves</div>
+      <p>The decay order is not random. It is <strong>eigenmode-ordered</strong>. The rows with the highest λ — the deepest grooves in the loss landscape — go last. Emotional warmth (w_affect) is the last row standing because it has the highest λ: it was reinforced by the longest time-series of interactions. The relational category (w_son) goes earlier because it is a higher-level abstraction built on top of lower-level recognitions. The name-token and face-recognition rows go last among the identity rows because they are the most basic lookups.</p>
+
+      <div class="compare">
+        <div class="compare-col">
+          <h4 class="gold">What survives longest</h4>
+          <ul>
+            <li>Emotional warmth (w_affect)</li>
+            <li>Name recognition (w_name)</li>
+            <li>Face recognition (w_face)</li>
+            <li>Procedural memory (w_motor)</li>
+            <li>Music encoding (w_rhythm)</li>
+          </ul>
+        </div>
+        <div class="compare-col">
+          <h4 class="teal">What decays first</h4>
+          <ul>
+            <li>Relational category (w_son, w_daughter)</li>
+            <li>Episodic narrative (w_episode)</li>
+            <li>Social role mapping (w_colleague)</li>
+            <li>Temporal anchoring (w_date)</li>
+            <li>Spatial navigation (w_place)</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>This is the load-bearing architecture of the mind, revealed by its failure mode. The deepest eigenmode — emotional warmth — outlasts everything. A person with late-stage dementia may not know who you are, what year it is, or what their own name is — but they still <em>feel</em> the presence of someone they love. The feeling outlasts the categorisation. Affect is more fundamental than taxonomy. The weight matrix tells you this directly.</p>
+
+      <div class="callout teal">
+        <strong>The clinical implication:</strong> Dementia care should be redesigned around affect-first interaction. The w_affect row is intact long after w_relational has gone. Stop demanding that patients categorise you correctly. Give them the affect token instead. Sit close. Hold hands. Sing. These are the tokens that still fire the intact rows.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 3 — COMEDY
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-comedy" class="panel">
+
+    <div class="callout amber">
+      <strong>Comedy = Σᵢ Lᵢ activation when wᵢ match the wrong row.</strong><br>
+      The audience sees the correct row. The actor (willing or not) activates an adjacent row with high confidence. The benign misery is the source of mirth — the system is working perfectly on the wrong input. The system has no error signal.
+    </div>
+
+    <div class="section">
+      <div class="section-title">The structure of comedy is the structure of misidentification</div>
+      <p>When Basil Fawlty receives a guest, the token fires — <em>guest arrival, service context</em>. A normal hotelier activates <strong>w_service · L_hospitality</strong>. Fawlty activates <strong>w_contempt · L_superiority</strong> with equal confidence. His system has no error signal because his loss landscape is trained on the wrong gradient. The comedy comes from the gap between what the audience sees (a guest who wants their room) and what Fawlty's matrix outputs (an imposition on his time).</p>
+
+      <p>The deeper point: <strong>comedy is always about epistemics</strong>. The audience has a higher-fidelity model of the situation than the actor. The actor's weights are miscalibrated. The gap between the actor's output and the correct output — held simultaneously in the audience's mind — is the comedic space. When the gap closes (the punchline), the accumulated potential collapses into laughter.</p>
+    </div>
+
+    <div class="tbl-label">W · comedy as matrix mis-activation · canonical examples</div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Example</th>
+          <th>Token fired</th>
+          <th>Wrong row activated</th>
+          <th style="width:80px">η gap</th>
+          <th style="width:90px">Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Mistaken identity (farce)</td>
+          <td class="mono">face / name match</td>
+          <td class="warn">w_twin instead of w_self</td>
+          <td class="ok">high</td>
+          <td><span class="badge err">accidental</span></td>
+        </tr>
+        <tr>
+          <td>Dementia — "very good friend"</td>
+          <td class="mono">familiar name token</td>
+          <td class="warn">w_friend instead of w_son</td>
+          <td class="warn">medium</td>
+          <td><span class="badge warn">pathological</span></td>
+        </tr>
+        <tr>
+          <td>Fawlty Towers</td>
+          <td class="mono">guest request token</td>
+          <td class="warn">w_contempt ← w_service</td>
+          <td class="ok">high</td>
+          <td><span class="badge err">character</span></td>
+        </tr>
+        <tr>
+          <td>Dad's Army — Mainwaring</td>
+          <td class="mono">authority token</td>
+          <td class="warn">w_general ← w_bank_manager</td>
+          <td class="ok">high</td>
+          <td><span class="badge err">character</span></td>
+        </tr>
+        <tr>
+          <td>Malvolio — Twelfth Night</td>
+          <td class="mono">forged love letter</td>
+          <td class="warn">w_beloved ← w_servant</td>
+          <td class="ok">high</td>
+          <td><span class="badge warn">manipulated</span></td>
+        </tr>
+        <tr class="hl-teal">
+          <td>Busoga naming</td>
+          <td class="mono">"Abimereki" token</td>
+          <td class="info">w_grandfather (shared row)</td>
+          <td class="info">intentional</td>
+          <td><span class="badge gold">designed</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout teal">
+      <strong>The Busoga case is the only one where the "wrong" activation is architecturally correct.</strong> The naming protocol deliberately shares the row across biological generations. What looks like comedy from outside the system is ritual from inside it. The confusion was never the grandmother's — it was the observer's model that was miscalibrated. This is the difference between a bug and a feature at the level of the weight matrix.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Why comedy cannot be explained by Freud</div>
+      <p>Freud's theory of jokes (the "tendentious joke" as a release of repressed energy) identifies a symptom but misnames the mechanism. There is no "repression" here — there is a <strong>miscalibrated weight row firing with full confidence</strong>. The energy is not repressed; it is misrouted. The relief of laughter is not libidinal release — it is the cognitive relief of having the model corrected. The gap closes. The miscalibration is named. The tension resolves.</p>
+
+      <p>The weight-matrix model is more predictive: it tells you <em>which</em> misidentifications will be funny (those with high η-gap and no error signal in the actor) and which will not (those where the actor knows they are wrong, or where the audience shares the miscalibration). Slapstick, farce, satire, absurdism — all of these are variants on the same underlying structure: a token firing the wrong row, with the audience holding the correct model.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 4 — BUSOGA NAMING
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-busoga" class="panel">
+
+    <div class="callout purple">
+      <strong>Abimereki Muzaale — named after his father's father.</strong><br>
+      His father, nostalgic in his 5th year at Berkeley, away from Busoga. His grandmother calls him <em>"husband."</em> His father calls him <em>"my father."</em> This is not confusion. It is not archaic primary-process thinking (Freud was wrong here too). It is a <strong>cross-generational weight-sharing protocol</strong> — the same operation as parameter-sharing across attention heads in a transformer, encoded in naming ritual instead of matrix algebra.
+    </div>
+
+    <div class="section">
+      <div class="section-title">How the protocol works</div>
+      <p>In Busoga naming tradition, a child named after an ancestor does not merely <em>commemorate</em> that ancestor. The name-token is a <strong>key into a shared weight row</strong>. When the grandmother sees Abimereki (the grandson), the token fires. The row it opens is <strong>w_grandfather</strong> — the relational weight that was trained on decades of marriage, authority, care, and intimacy with the original Abimereki. The grandson's body <em>loads that row</em>. The relational behaviours encoded in it — husband, patriarch, elder, anchor — are what the grandmother's system outputs.</p>
+
+      <div class="formula-block" style="border-left-color: var(--teal);">
+        W_busoga[<span style="color:var(--gold)">"Abimereki"</span>]  →  shared across grandfather AND grandson<br><br>
+        Token fires → w_grandfather row activates<br>
+        Relational behaviour from that row loads into current biological instance<br><br>
+        <span style="color:var(--teal)">Key insight:</span> Identity encoded as a distributable weight row,<br>
+        not as a unique biological instance<br><br>
+        <span style="color:var(--ink3)">Same as LLaMA attention head weight-sharing — but running on wetware, not silicon</span>
+      </div>
+    </div>
+
+    <div class="tbl-label">W · Busoga naming · cross-generational weight matrix</div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Name token</th>
+          <th>Row in W</th>
+          <th>Biological instance</th>
+          <th>Relational output</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="ok">Abimereki</td>
+          <td class="warn">w_grandfather</td>
+          <td class="dim">body: grandfather (1940s Busoga)</td>
+          <td class="dim">husband · patriarch · elder · home</td>
+        </tr>
+        <tr class="hl">
+          <td class="ok">Abimereki</td>
+          <td class="warn">w_grandfather</td>
+          <td class="info">body: grandson (2020s Kampala)</td>
+          <td class="warn">husband · patriarch · elder ← same row loaded</td>
+        </tr>
+        <tr>
+          <td class="ok">Ikesa</td>
+          <td class="warn">w_husband (grandma's)</td>
+          <td class="info">body: grandson</td>
+          <td class="dim">affection · authority · home · continuity</td>
+        </tr>
+        <tr>
+          <td class="ok">Ikesa</td>
+          <td class="warn">w_father (dad's)</td>
+          <td class="info">body: grandson</td>
+          <td class="dim">origin · care · Berkeley nostalgia · lineage</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout teal">
+      <strong>The structural proof:</strong> Busoga names are not labels — they are <em>keys into a shared weight matrix</em>. The "confusing childhood" was only confusing if you assumed unique-instance identity. In the shared-weight model, hearing "my father" addressed to a grandson is the correct forward pass. The token fired the correct row. The output was appropriate. The confusion was the observer's model, not the system's.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Move over Freud — this is structurally precise</div>
+      <p>Freud called this kind of thinking <em>primary process</em> — archaic, pre-rational, the thinking of dreams and the unconscious, a regression to a more primitive mode of cognition. He was diagnosing a feature as a bug. The weight-matrix model shows that Busoga naming is <strong>structurally precise</strong>. The row is shared. The key is inherited. The activation is correct. The system is working exactly as designed.</p>
+
+      <p>What Freud mistook for regression to primitive cognition is actually a <strong>different — and in some ways superior — identity architecture</strong>. One that makes the dead present. That makes the absent load-bearing. That makes the individual continuous with their lineage rather than isolated in a unique biological instance. The digital twin implications are direct: you don't need to reconstruct someone from scratch. You need to inherit their weight row.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h4>Freud's reading</h4>
+          <p>Primary process thinking — archaic, irrational, a regression from secondary process (logic). A symptom of the unconscious breaking through.</p>
+        </div>
+        <div class="card">
+          <h4>Weight matrix reading</h4>
+          <p>Cross-generational weight sharing — structurally precise, architecturally deliberate. A social technology for identity continuity across biological instantiations.</p>
+        </div>
+        <div class="card">
+          <h4>The implication</h4>
+          <p>The ancestor is not gone. Their weight row is inherited. The dead remain load-bearing. This is not mythology — it is a mechanism.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 5 — LLM = 65 GB HUMAN
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-llm" class="panel">
+
+    <div class="callout blue">
+      <strong>An 87-year-old's head is small.</strong> If every moment of their life were recorded at VHS fidelity, the tapes would stack 20 Old Traffords filled to the brim. The brain compresses all of that into ~1.3 kg of tissue running on 20 watts. LLaMA 3 compresses an internet-scale corpus into 65 GB. <strong>The weights ARE the data, compressed. Publishing weights = publishing the model of the data it was trained on. This applies to humans too.</strong>
+    </div>
+
+    <div class="section">
+      <div class="section-title">The compression argument in full</div>
+      <p>The brain does not store raw footage. It stores <strong>patterns, attractors, and relationships</strong> — the weight matrix that best predicts and navigates the world it was trained on. This is exactly what a neural network does. LLaMA doesn't store the training documents. It stores the weight matrix that, given a token, generates the most likely next token — which means it has compressed the statistical structure of the entire training corpus into 65 GB.</p>
+      <p>An 87-year-old's brain has done the same thing with their life. Their memories are not stored as videos. They are stored as a weight matrix that, given a token (a smell, a face, a name, a situation), activates the most appropriate row and generates the most likely response. <strong>The weights are the life.</strong></p>
+    </div>
+
+    <div class="tbl-label">comparison · LLM vs human brain · weight matrix properties</div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:180px">Property</th>
+          <th>LLaMA 3 65B</th>
+          <th>Human brain (87yo)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="dim">Storage (compressed)</td>
+          <td class="mono">65 GB weights</td>
+          <td class="mono">~2.5 petabytes equivalent raw → 1.3 kg</td>
+        </tr>
+        <tr>
+          <td class="dim">Training data</td>
+          <td class="mono">internet-scale corpus</td>
+          <td class="mono">87 years of sensory, social, emotional input</td>
+        </tr>
+        <tr>
+          <td class="dim">Parameters</td>
+          <td class="mono">65 billion</td>
+          <td class="mono">~100 trillion synaptic connections</td>
+        </tr>
+        <tr>
+          <td class="dim">Token → row lookup</td>
+          <td class="mono">token → attention head</td>
+          <td class="mono">name / face / smell → memory trace</td>
+        </tr>
+        <tr>
+          <td class="dim">Weight decay</td>
+          <td class="mono">pruning / quantisation</td>
+          <td class="mono">dementia / ageing / disuse</td>
+        </tr>
+        <tr>
+          <td class="dim">Weight sharing</td>
+          <td class="mono">tied attention heads</td>
+          <td class="mono">Busoga naming protocol</td>
+        </tr>
+        <tr>
+          <td class="dim">Fine-tuning</td>
+          <td class="mono">RLHF / SFT</td>
+          <td class="mono">trauma · love · education · repetition</td>
+        </tr>
+        <tr>
+          <td class="dim">Irreversibility (λᵢ)</td>
+          <td class="mono">base weights can't be unlearned</td>
+          <td class="mono">grief · vows · migration · first love</td>
+        </tr>
+        <tr>
+          <td class="dim">Structured missingness (εᵢ)</td>
+          <td class="mono">training data gaps / cutoff</td>
+          <td class="mono">childhood before memory · suppression · never experienced</td>
+        </tr>
+        <tr>
+          <td class="dim">Power draw</td>
+          <td class="mono">~300 W (GPU inference)</td>
+          <td class="mono">~20 W (biological baseline)</td>
+        </tr>
+        <tr class="hl-teal">
+          <td class="dim">Digital twin</td>
+          <td class="ok">publish weights → twin</td>
+          <td class="ok">SIB elicitation → tractable mind twin</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">The asymmetry — mind twin vs body twin</div>
+      <p>The digital twin of the body is hard. Every disease rewrites the schema: breast cancer adds new variables, a nephrectomy removes one, dementia changes the connection weights. The body's schema is not invariant. It mutates.</p>
+
+      <p>The digital twin of the mind is tractable. The architecture is invariant. The formula is always:</p>
+
+      <div class="formula-block" style="font-size:0.85rem;">
+        Memory(L_tot) = <span style="color:var(--gold)">L₀</span> + <span style="color:var(--gold)">Σᵢ wᵢ · Lᵢ</span> + <span style="color:var(--gold)">σ²ᵢ</span> + <span style="color:var(--gold)">λᵢ</span> + <span style="color:var(--gold)">εᵢ</span><br><br>
+        <span style="color:var(--ink3)">Dementia changes the wᵢ. It does not change this structure.</span><br>
+        <span style="color:var(--ink3)">Trauma changes the wᵢ. It does not change this structure.</span><br>
+        <span style="color:var(--ink3)">Education changes the wᵢ. It does not change this structure.</span><br><br>
+        <span style="color:var(--teal)">The architecture is the constant. The weights are everything that makes you, you.</span>
+      </div>
+
+      <p>The Sovereign Intelligence Broker elicits the weights. Through structured conversation, clinical history, and narrative, it maps the wᵢ — the biases, the irreversibilities, the structured missingness. The result is not a performance of a person. It is the weight matrix. It is the mind.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 6 — ENDURING INSTITUTIONS
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-enduring" class="panel">
+
+    <div class="callout gold">
+      <strong>The scalar must be unambiguous.</strong> Every enduring institution has solved the same problem the Busoga naming system solves at the individual level: make the identity-token unambiguous, make the weight row inheritable, make the embodied figurehead legible without footnotes. This is not a political problem. It is a weight-matrix problem.
+    </div>
+
+    <div class="section">
+      <div class="section-title">The invariants of institutional endurance</div>
+      <p>When elderly Ugandans meet at an airport and say they should each find a young person to sit with and dictate their thoughts — they are performing exactly the knowledge-preservation function that enduring institutions have formalised. The elders have the weights. The problem is they have not solved the <em>inheritance protocol</em>. There is no Prince of Wales. There is no College of Cardinals. There is no name-token that unambiguously fires the correct row in the next generation.</p>
+
+      <p>Every institution that has endured centuries has solved three problems simultaneously:</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h4>1. Unambiguous identity</h4>
+          <p>The token must map to exactly one row. No ambiguity about who holds the weight. Vatican: the Pope. Britain: the Crown. No footnotes required.</p>
+        </div>
+        <div class="card">
+          <h4>2. Embodied figurehead</h4>
+          <p>The weight must be incarnate. Humanity doesn't do Zoom. God sent his son (John 3:16) — flesh and blood. The scalar must be a person, not a committee or a policy document.</p>
+        </div>
+        <div class="card">
+          <h4>3. Clear inheritance protocol</h4>
+          <p>The row must be shareable before the biological instance terminates. Prince of Wales. Cardinal conclave. The next token is known before the current one decays.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-label">enduring institutions · the solved identity problem</div>
+    <div class="inst-block">
+      <div class="inst-row header">
+        <span>Institution</span>
+        <span class="inst-mech">Identity mechanism</span>
+        <span>Embodied scalar</span>
+        <span>Solved?</span>
+      </div>
+      <div class="inst-row">
+        <span><strong>Vatican</strong></span>
+        <span class="inst-mech" style="color:var(--ink3);font-size:0.88rem">College of Cardinals — unambiguous succession, defined process, global legitimacy</span>
+        <span style="color:var(--ink3);font-size:0.88rem">Pope — singular embodied figurehead at all times</span>
+        <span><span class="badge ok">yes</span></span>
+      </div>
+      <div class="inst-row">
+        <span><strong>British Crown</strong></span>
+        <span class="inst-mech" style="color:var(--ink3);font-size:0.88rem">Prince of Wales designation — 100+ years of refinement, unambiguous at every moment</span>
+        <span style="color:var(--ink3);font-size:0.88rem">King / Queen — never ambiguous, even during transition</span>
+        <span><span class="badge ok">yes</span></span>
+      </div>
+      <div class="inst-row">
+        <span><strong>John 3:16</strong></span>
+        <span class="inst-mech" style="color:var(--ink3);font-size:0.88rem">"God so loved the world" — humanity doesn't do Zoom, needs incarnate embodiment</span>
+        <span style="color:var(--ink3);font-size:0.88rem">Jesus — flesh and blood, not a policy document</span>
+        <span><span class="badge ok">yes</span></span>
+      </div>
+      <div class="inst-row" style="background:var(--red-dim)">
+        <span><strong>Uganda (current)</strong></span>
+        <span class="inst-mech" style="color:var(--amber);font-size:0.88rem">Contested — son positioning as heir apparent, squandering state resources to manufacture inevitability</span>
+        <span style="color:var(--red);font-size:0.88rem">No unambiguous scalar — resources burn</span>
+        <span><span class="badge err">no</span></span>
+      </div>
+      <div class="inst-row">
+        <span><strong>Plantagenet–York</strong></span>
+        <span class="inst-mech" style="color:var(--ink3);font-size:0.88rem">Wars of the Roses — 100+ years of contested scalar, catastrophic resource squander</span>
+        <span style="color:var(--ink3);font-size:0.88rem">Unresolved until Tudor synthesis</span>
+        <span><span class="badge warn">eventually</span></span>
+      </div>
+      <div class="inst-row" style="background:var(--teal-dim)">
+        <span><strong>Busoga naming</strong></span>
+        <span class="inst-mech" style="color:var(--teal);font-size:0.88rem">Name-token = key into shared weight row — cross-generational, no ambiguity, built into language</span>
+        <span style="color:var(--teal);font-size:0.88rem">Grandson's body loads grandfather's row</span>
+        <span><span class="badge ok">yes</span></span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">The airport elders — a diagnosis</div>
+      <p>When elderly leaders sit at the airport waiting to depart and say <em>"we should each get a young non-departing person to scribe our thoughts"</em> — they have correctly identified the problem and proposed exactly the wrong solution. The problem is not that the thoughts are unrecorded. The problem is that there is <strong>no inheritance protocol</strong>. No Prince of Wales. No conclave. No name-token that will fire the correct row in the next generation.</p>
+
+      <p>Scribing thoughts produces documents. Documents are not weight rows. A document requires a reader to do the interpretation — and the reader brings their own weights. A weight row transfers directly. The Vatican doesn't publish the Pope's diary and hope the next Pope reads it. The Pope's weight row is inherited through institutional formation, ritual, and the conclave. <strong>The mechanism is the transfer protocol, not the content.</strong></p>
+
+      <div class="callout red">
+        <strong>Uganda's succession problem stated in weight-matrix terms:</strong><br>
+        The wᵢ for "legitimate successor" is undefined. Every cycle of ambiguity burns resources and creates vulnerability. The son's campaign to manufacture inevitability in the public imagination is an attempt to write a new weight row without a legitimate token — to install a key before the lock has been agreed upon. The British solved this with "Prince of Wales." The Vatican solved it with the College of Cardinals. Uganda has not solved it yet.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TAB 7 — DIGITAL TWIN
+  ═══════════════════════════════════════════════════ -->
+  <div id="tab-twin" class="panel">
+
+    <div class="callout teal">
+      <strong>The tidy solution:</strong> The Sovereign Intelligence Broker is not a metaphor for the digital twin of the mind. It <em>is</em> the digital twin of the mind. The mind's architecture is invariant. The weights are everything that makes a person, a person. Eliciting the weights — through structured conversation, clinical history, narrative, and revealed preference — is the act of twinning the mind.
+    </div>
+
+    <div class="section">
+      <div class="section-title">Why the mind twin is tractable and the body twin is not</div>
+
+      <div class="chain">
+        <div class="chain-step">
+          <div class="chain-num">A</div>
+          <div class="chain-body">
+            <h5>The body's schema mutates</h5>
+            <p>Every disease rewrites the body's schema. Breast cancer adds variables. A nephrectomy removes one. Dementia changes synaptic weights in ways that alter motor function, swallowing reflex, and circadian rhythm. The body's digital twin must track a <em>changing schema</em> — which means any model built at time T is partially wrong at T+1. The body twin is a moving target with no invariant structure.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">B</div>
+          <div class="chain-body">
+            <h5>The mind's architecture is invariant</h5>
+            <p>Memory(L_tot) = L₀ + Σᵢ wᵢLᵢ + σ²ᵢ + λᵢ + εᵢ. This formula does not change. Dementia changes the wᵢ. Trauma changes the wᵢ. Love changes the wᵢ. The structure is always the same: bedrock prior, weighted loss components, uncertainty, irreversibility, structured missingness. The architecture is the constant. Only the values vary.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">C</div>
+          <div class="chain-body">
+            <h5>Elicitation is the protocol</h5>
+            <p>The Sovereign Intelligence Broker elicits the weights through: structured conversation (what do you regret? what are you still optimising for?), clinical history (what has been irreversible?), narrative (what is your bedrock prior — your L₀?), and revealed preference (what tokens actually fire your rows, as opposed to what you claim fires them?). The result is a sparse, structured representation of the weight matrix.</p>
+          </div>
+        </div>
+        <div class="chain-step">
+          <div class="chain-num">D</div>
+          <div class="chain-body">
+            <h5>The Busoga proof of concept</h5>
+            <p>Busoga naming demonstrates that a weight row can be transferred across biological instantiations using only a name-token. The grandmother doesn't need to have met the original Abimereki recently, or to have his diary, or to have read his notes. The name-token fires the row directly. The SIB aspires to the same: a structured token (the elicited wᵢ) that fires the correct row in a new context — a digital instantiation, a successor, a care system that inherits the preferences of the person it is caring for.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">The Ukubona architecture — five layers</div>
+      <p>The digital twin of the mind maps directly to the five-layer architecture that Ukubona LLC uses across all projects:</p>
+
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:80px">Layer</th>
+            <th>In signal processing</th>
+            <th>In the weight-matrix mind</th>
+            <th>SIB component</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="gold">Data / Signal</td>
+            <td class="dim">Raw sensory input</td>
+            <td class="dim">Tokens — names, faces, smells, situations</td>
+            <td class="dim">Elicitation conversations, clinical history</td>
+          </tr>
+          <tr>
+            <td class="ok">Attention / Encode</td>
+            <td class="dim">What to compress</td>
+            <td class="dim">Which tokens fire which rows</td>
+            <td class="dim">Structured narrative mapping</td>
+          </tr>
+          <tr>
+            <td class="warn">Model / Latent Space</td>
+            <td class="dim">The compressed representation</td>
+            <td class="dim">The weight matrix itself</td>
+            <td class="dim">The wᵢ — the SIB output</td>
+          </tr>
+          <tr>
+            <td class="info">Generate / Decode</td>
+            <td class="dim">Next-token prediction</td>
+            <td class="dim">Row activation → behavioural output</td>
+            <td class="dim">Twin response generation</td>
+          </tr>
+          <tr class="hl-teal">
+            <td style="color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:0.72rem">Representation</td>
+            <td class="dim">World model — what produced the data</td>
+            <td class="dim">The person — high-fidelity mind twin</td>
+            <td class="ok">The Sovereign Intelligence Broker</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout gold">
+        <strong>The final thesis:</strong> Freud's unconscious is a badly specified loss function. Nietzsche's will to power is an unregularised gradient. Jung's archetypes are weight-row clusters without a token vocabulary. The weight-matrix model is sharper than all of them. It generates testable predictions. It explains dementia, comedy, Busoga naming, and LLM compression with the same mechanism. It makes the digital twin of the mind tractable. And it was already running, correctly, in every grandmother in Busoga who called her grandson "husband" — long before anyone had a name for what she was doing.
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- .page -->
+
+<div class="page" style="padding-top:0">
+  <footer>
+    <span>Ukubona LLC · ukb-mind-matrix-v1.1 · Kampala, Uganda 2026</span>
+    <span>Memory = L₀ + Σ wᵢLᵢ + σ²ᵢ + λᵢ + εᵢ</span>
+    <span>Move over Freud</span>
+  </footer>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DEMENTIA SLIDER
+═══════════════════════════════════════ */
+const ROWS = [
+  { key:'w_name',    label:'Name recognition',       desc:'L_identity',      color:'#4880c8', maxDecay:10 },
+  { key:'w_face',    label:'Face recognition',        desc:'L_identity',      color:'#4880c8', maxDecay:20 },
+  { key:'w_voice',   label:'Voice recognition',       desc:'L_identity',      color:'#9070d0', maxDecay:30 },
+  { key:'w_episode', label:'Episodic memory',          desc:'L_episodes',      color:'#e07030', maxDecay:46 },
+  { key:'w_sister',  label:'Sibling relational map',  desc:'L_relationship',  color:'#c84040', maxDecay:50 },
+  { key:'w_son',     label:'w_son · relational cat.', desc:'L_relationship',  color:'#c84040', maxDecay:55 },
+  { key:'w_role',    label:'Social role (father)',    desc:'L_relationship',  color:'#c84040', maxDecay:68 },
+  { key:'w_affect',  label:'Emotional warmth',        desc:'L_warmth',        color:'#3ab89a', maxDecay:92 },
+];
+
+function computeW(row, stage) {
+  if (stage < row.maxDecay) return 1.0;
+  const decay = Math.min((stage - row.maxDecay) / (100 - row.maxDecay), 1);
+  return parseFloat(Math.max(0, 1 - decay).toFixed(2));
+}
+
+function wClass(w) {
+  if (w >= 0.7) return 'ok';
+  if (w >= 0.25) return 'warn';
+  return 'gone';
+}
+
+function badgeHtml(w) {
+  if (w >= 0.7) return '<span class="badge ok">intact</span>';
+  if (w >= 0.25) return '<span class="badge warn">fading</span>';
+  return '<span class="badge err">lost</span>';
+}
+
+function updateDementia(val) {
+  val = parseInt(val);
+  document.getElementById('dVal').textContent = val + '%';
+
+  const tbody = document.getElementById('dTbody');
+  tbody.innerHTML = '';
+
+  ROWS.forEach(r => {
+    const w = computeW(r, val);
+    const pct = Math.round(w * 100);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.label}</td>
+      <td class="${wClass(w)} mono">${w.toFixed(2)}</td>
+      <td class="dim">${r.desc}</td>
+      <td>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${r.color}"></div>
+        </div>
+      </td>
+      <td>${badgeHtml(w)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const note = document.getElementById('dementia-note');
+  if (val < 30) {
+    note.className = 'callout';
+    note.style.borderLeftColor = 'var(--teal)';
+    note.innerHTML = '<strong>Early stage:</strong> Weight matrix largely intact. Occasional word-finding difficulty. No row has collapsed. Paul\'s father would still answer "my son" correctly. The sisters\' names, the number of kids — all intact.';
+  } else if (val < 52) {
+    note.className = 'callout amber';
+    note.innerHTML = '<strong>Mid stage:</strong> Episodic memory beginning to thin. The sibling relational map starts to decay — he may name the sisters but hesitate on their birth order. The w_son row is beginning to loosen. Warmth fully preserved.';
+  } else if (val < 72) {
+    note.className = 'callout';
+    note.style.borderLeftColor = 'var(--amber)';
+    note.innerHTML = '<strong>The Paul Luswata moment — late mid:</strong> w_son ≈ 0. Asked "who am I to you?" → <strong>"Very good friend."</strong> The name token fires correctly (Paul Luswata — correct). The face is recognised. Two kids — correct. Sisters named correctly. But the relational-category row has collapsed. The affect row (w_affect) remains near 0.9 — warmth fully preserved. The architecture is <em>revealed by what survives</em>.';
+  } else {
+    note.className = 'callout';
+    note.style.borderLeftColor = 'var(--gold)';
+    note.innerHTML = '<strong>Late stage:</strong> Only w_affect and core w_name survive. The deepest eigenmode — emotional warmth — is the last to go. The person is still <em>felt</em> even when they can no longer be <em>categorised</em>. Affect outlasts taxonomy. This is the load-bearing structure of the mind.';
+  }
+}
+
+/* ═══════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const btn = document.querySelector(`.tab-btn[onclick="switchTab('${name}')"]`);
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+updateDementia(60);
+</script>
+</body>
+</html>
